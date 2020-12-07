@@ -2,6 +2,7 @@ package gen
 
 import (
 	"github.com/goools/go-gen/generate"
+	"github.com/goools/go-gen/generate/enum_generator"
 	"github.com/spf13/cobra"
 )
 
@@ -10,7 +11,7 @@ var (
 		Use:   "enum",
 		Short: "generate interfaces of enumeration",
 		Run: func(cmd *cobra.Command, args []string) {
-			generate.RunGenerator(generate.NewEnumGenerator, args)
+			generate.RunGenerator(enum_generator.NewEnumGenerator, args)
 		},
 	}
 )

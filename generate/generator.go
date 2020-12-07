@@ -7,7 +7,7 @@ import (
 )
 
 type Generator interface {
-	WriteToFile(filePath string)
+	WriteToFile()
 	Scan(args ...string)
 }
 
@@ -26,5 +26,5 @@ func RunGenerator(createGenerator CreateGenerator, args []string) {
 		logrus.Fatalf("packages load %s have an err: %v", pwd, err)
 	}
 	generator.Scan(args...)
-	generator.WriteToFile("a.go")
+	generator.WriteToFile()
 }
