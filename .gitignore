@@ -15,3 +15,4 @@
 # vendor/
 .idea/
 /go.sum
+*_generate.go

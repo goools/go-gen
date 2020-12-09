@@ -6,5 +6,6 @@ type EnumB int
 
 const (
 	// comment None
-	EnumANone EnumA = 0
+	EnumANone EnumA = iota
+	EnumANone2
 )
