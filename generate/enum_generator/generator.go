@@ -2,13 +2,14 @@ package enum_generator
 
 import (
 	"fmt"
+	"go/types"
+	"os"
+	"path/filepath"
+
 	"github.com/dave/jennifer/jen"
 	"github.com/goools/go-gen/generate"
 	"github.com/goools/go-gen/packagex"
 	"github.com/sirupsen/logrus"
-	"go/types"
-	"os"
-	"path/filepath"
 )
 
 type EnumOption struct {
@@ -94,7 +95,6 @@ func (gen *EnumGenerator) writeToFile(packageFilePath string, enum *Enum) {
 	generateFile := jen.NewFilePath(enum.PkgPath)
 	generateFile.HeaderComment(WriteDoNotEdit())
 	generateFile.Add(enum.writeString())
-	//logrus.Infof("generateFile: %#v", generateFile)
 	err := generateFile.Save(enumFilePath)
 	if err != nil {
 		logrus.Fatalf("save enum code to file have an err: %v, enum: %s, file: %s", err, enum.Name, enumFilePath)
