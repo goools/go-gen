@@ -18,14 +18,6 @@ type EnumOption struct {
 	Doc        string `json:"doc"`
 }
 
-func (e EnumOption) MarshalJSON() ([]byte, error) {
-	panic("implement me")
-}
-
-func (e EnumOption) UnmarshalJSON(bytes []byte) error {
-	panic("implement me")
-}
-
 func NewEnum(pkgPath, enumName string, options []EnumOption) *Enum {
 	return &Enum{
 		PkgPath:      pkgPath,
