@@ -1,12 +1,13 @@
 package enum_generator
 
 import (
-	"github.com/goools/go-gen/packagex"
-	"github.com/sirupsen/logrus"
 	"go/ast"
 	"go/types"
 	"strconv"
 	"strings"
+
+	"github.com/goools/go-gen/packagex"
+	"github.com/sirupsen/logrus"
 )
 
 type EnumScanner struct {
@@ -31,8 +32,9 @@ func (scanner *EnumScanner) Scan(enum *types.TypeName) *Enum {
 			continue
 		}
 		val := typeConst.Val()
-		//label := ident.Obj.Decl.(*ast.ValueSpec).Comment.Text()
+		// label := ident.Obj.Decl.(*ast.ValueSpec).Comment.Text()
 		doc := ident.Obj.Decl.(*ast.ValueSpec).Doc.Text()
+		doc = strings.Trim(doc, " \n\t\r")
 		valName := constName[len(enum.Name()):]
 		logrus.Debugf("val: %d, doc: %s, valName: %s", val, doc, valName)
 		intVal, err := strconv.ParseInt(val.String(), 10, 64)

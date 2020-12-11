@@ -101,6 +101,8 @@ func (gen *EnumGenerator) writeToFile(packageFilePath string, enum *Enum) {
 	generateFile.Add(enum.writeMarshalText())
 	generateFile.Line()
 	generateFile.Add(enum.writeUnmarshalText())
+	generateFile.Line()
+	generateFile.Add(enum.writeComment())
 	err := generateFile.Save(enumFilePath)
 	if err != nil {
 		logrus.Fatalf("save enum code to file have an err: %v, enum: %s, file: %s", err, enum.Name, enumFilePath)

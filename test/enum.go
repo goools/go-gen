@@ -5,7 +5,8 @@ type EnumA int
 type EnumB int
 
 const (
-	// comment None
+	// comment EnumANone
+	// 
 	EnumANone EnumA = iota
 	EnumANone2
 )
