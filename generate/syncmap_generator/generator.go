@@ -1,15 +1,25 @@
 package syncmap_generator
 
 import (
+	"fmt"
 	"regexp"
 
+	"github.com/dave/jennifer/jen"
 	"github.com/goools/go-gen/generate"
 	"github.com/goools/go-gen/packagex"
 	"github.com/sirupsen/logrus"
 )
 
 var (
-	syncMapDefRegexp = regexp.MustCompile(`(^[A-Za-z_][A-Za-z0-9]*)<(^[A-Za-z][A-Za-z0-9]*),(^[A-Za-z][A-Za-z0-9]*)>`)
+	syncMapDefRegexp = regexp.MustCompile(`([A-Za-z_][A-Za-z0-9]*)<([A-Za-z][A-Za-z0-9]*),([A-Za-z][A-Za-z0-9]*)>`)
+)
+
+const (
+	syncMapDefRegexpTotal          = 4
+	syncMapDefRegexpNameIndex      = 1
+	syncMapDefRegexpKeyTypeIndex   = 2
+	syncMapDefRegexpValueTypeIndex = 3
+	syncMapFuncThisName            = "s"
 )
 
 type SyncMap struct {
@@ -21,9 +31,30 @@ type SyncMap struct {
 	funcThisName string
 }
 
-func NewSyncMap(pkgPath, name string) *SyncMap {
-	logrus.Debugf("create new sync map, package path: %s, name: %s", pkgPath, name)
-	res := &SyncMap{}
+func (syncMap *SyncMap) syncMapDefParse(syncMapDef string) {
+	var res []string
+	res = syncMapDefRegexp.FindStringSubmatch("Pill<int,int>")
+	if len(res) != syncMapDefRegexpTotal {
+		panic("cannot find syncmap name, key type and value type")
+	}
+	syncMap.Name = res[syncMapDefRegexpNameIndex]
+	syncMap.KeyType = res[syncMapDefRegexpKeyTypeIndex]
+	syncMap.ValueType = res[syncMapDefRegexpValueTypeIndex]
+	return
+}
+
+func (syncMap *SyncMap) funcTypeParams() jen.Code {
+	return jen.Id(syncMap.funcThisName).Id(fmt.Sprintf("*%s", syncMap.funcTypeName))
+}
+
+func NewSyncMap(pkgPath, syncMapDef string) *SyncMap {
+	logrus.Debugf("create new sync map, package path: %s, syncMapDef: %s", pkgPath, syncMapDef)
+	res := &SyncMap{
+		PkgPath: pkgPath,
+	}
+	res.syncMapDefParse(syncMapDef)
+	res.funcTypeName = res.Name
+	res.funcThisName = syncMapFuncThisName
 	return res
 }
 
@@ -38,23 +69,41 @@ func NewSyncMapGenerator(pkg *packagex.Package) generate.Generator {
 	}
 }
 
+func (s *SyncMapGenerator) writeToFile(syncMap *SyncMap) {
+	logrus.Infof("begin generate syncmap: %s", syncMap.Name)
+	syncMapSnackName := generate.ToSnakeCase(syncMap.Name)
+	syncMapFileName := fmt.Sprintf("%s_syncmap_generate.go", syncMapSnackName)
+	generateFile := jen.NewFilePath(syncMap.PkgPath)
+
+	generateFile.HeaderComment(generate.WriteDoNotEdit())
+	generateFile.Add(syncMap.writeTypeDef())
+	generateFile.Add(syncMap.writeFuncStore())
+
+	err := generateFile.Save(syncMapFileName)
+	if err != nil {
+		logrus.Fatalf("save enum code to file have an err: %v, syncmap: %s, file: %s", err, syncMap.Name, syncMapFileName)
+	}
+	logrus.Infof("complete generate syncmap: %s", syncMap.Name)
+}
+
 func (s *SyncMapGenerator) WriteToFile() {
-	logrus.Debugf("write to file")
-}
-
-func (s *SyncMapGenerator) syncMapDefParse(syncMapDef string) (typeName, keyType, valueType string) {
-	return
-}
-
-func (s *SyncMapGenerator) checkSyncMaps(syncMapDefs []string) {
+	for i := range s.syncMaps {
+		syncMap := s.syncMaps[i]
+		s.writeToFile(syncMap)
+	}
 }
 
 func (s *SyncMapGenerator) Scan(args ...string) {
-	s.checkSyncMaps(args)
 	pkgPath := s.pkg.PkgPath
+	typeDefNameSet := make(map[string]struct{})
 	for i := range args {
 		syncMapDef := args[i]
 		syncMap := NewSyncMap(pkgPath, syncMapDef)
 		s.syncMaps = append(s.syncMaps, syncMap)
+		if _, exist := typeDefNameSet[syncMap.Name]; exist {
+			logrus.Fatalf("duplicate syncmap name: %s", syncMap.Name)
+		} else {
+			typeDefNameSet[syncMap.Name] = struct{}{}
+		}
 	}
 }
