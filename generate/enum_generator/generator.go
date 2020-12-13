@@ -12,6 +12,10 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+const (
+	enumFuncThisName = "e"
+)
+
 type EnumOption struct {
 	ConstValue int64  `json:"constValue"`
 	Value      string `json:"value"`
@@ -24,7 +28,7 @@ func NewEnum(pkgPath, enumName string, options []EnumOption) *Enum {
 		Name:         enumName,
 		Options:      options,
 		funcTypeName: fmt.Sprintf("*%s", enumName),
-		funcThisName: "e",
+		funcThisName: enumFuncThisName,
 	}
 }
 
