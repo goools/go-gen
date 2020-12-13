@@ -4,6 +4,17 @@ import (
 	"github.com/dave/jennifer/jen"
 )
 
+func (syncMap *SyncMap) writeEmptyValue() jen.Code {
+	emptyFunc := jen.Func().Params().Params(jen.Id("val").Add(jen.Id(syncMap.ValueType))).Block(jen.Return())
+	return jen.Var().Id(syncMap.emptyValueName).Op("=").Add(emptyFunc.Call())
+}
+
+func (syncMap *SyncMap) syncMapObjId() *jen.Statement {
+	ptrOp := jen.Op("*")
+	syncMapObjId := jen.Params(ptrOp.Add(jen.Qual("sync", "Map"))).Params(jen.Id(syncMap.funcThisName))
+	return syncMapObjId
+}
+
 func (syncMap *SyncMap) writeTypeDef() jen.Code {
 	res := jen.Type()
 	res.Id(syncMap.Name).Qual("sync", "Map")
@@ -21,10 +32,62 @@ func (syncMap *SyncMap) writeFuncStore() jen.Code {
 	// func params
 	res = res.Params(jen.List(jen.Id("key").Id(syncMap.KeyType), jen.Id("value").Id(syncMap.ValueType)))
 	// func body
+	syncMapObjId := syncMap.syncMapObjId()
+
 	res.Block(
-		jen.Id(syncMap.funcThisName).Dot("Store").Call(jen.Id("key"), jen.Id("value")),
+		syncMapObjId.Dot("Store").Call(jen.Id("key"), jen.Id("value")),
 	)
 
 	return res
 }
 
+func (syncMap *SyncMap) writeFuncLoadOrStore() jen.Code {
+	funcName := "LoadOrStore"
+	// func
+	res := jen.Func()
+	// func type params
+	res = res.Params(syncMap.funcTypeParams())
+	// func name
+	res = res.Id(funcName)
+	// func params
+	res = res.Params(jen.List(jen.Id("key").Id(syncMap.KeyType), jen.Id("value").Id(syncMap.ValueType))).
+		Params(jen.List(jen.Id(syncMap.KeyType), jen.Bool()))
+
+	// func body
+	syncMapObjId := syncMap.syncMapObjId()
+	result := jen.Id("res").Assert(jen.Id(syncMap.ValueType))
+	res = res.Block(
+		jen.List(jen.Id("res"), jen.Id("ok")).Op(":=").Add(syncMapObjId.Dot("LoadOrStore").Call(jen.Id("key"), jen.Id("value"))),
+		jen.If(jen.Op("!").Add().Id("ok")).Block(
+			jen.Return(jen.List(jen.Id(syncMap.emptyValueName), jen.Id("ok"))),
+		),
+		jen.Return(jen.List(result, jen.Id("ok"))),
+	)
+
+	return res
+}
+
+func (syncMap *SyncMap) writeFuncLoad() jen.Code {
+	funcName := "Load"
+	// func
+	res := jen.Func()
+	// func type params
+	res = res.Params(syncMap.funcTypeParams())
+	// func name
+	res = res.Id(funcName)
+	// func params
+	res = res.Params(jen.List(jen.Id("key").Id(syncMap.KeyType))).Params(jen.List(jen.Id(syncMap.KeyType), jen.Bool()))
+
+	// func body
+	syncMapObjId := syncMap.syncMapObjId()
+	result := jen.Id("res").Assert(jen.Id(syncMap.ValueType))
+	res = res.Block(
+		jen.List(jen.Id("res"), jen.Id("ok")).Op(":=").Add(syncMapObjId.Dot("Load").Call(jen.Id("key"))),
+		jen.If(jen.Op("!").Add().Id("ok")).Block(
+			jen.Return(jen.List(jen.Id(syncMap.emptyValueName), jen.Id("ok"))),
+		),
+		jen.Return(jen.List(result, jen.Id("ok"))),
+	)
+
+	return res
+}

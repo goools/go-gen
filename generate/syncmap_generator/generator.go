@@ -23,12 +23,13 @@ const (
 )
 
 type SyncMap struct {
-	PkgPath      string
-	Name         string
-	KeyType      string
-	ValueType    string
-	funcTypeName string
-	funcThisName string
+	PkgPath        string
+	Name           string
+	KeyType        string
+	ValueType      string
+	funcTypeName   string
+	funcThisName   string
+	emptyValueName string
 }
 
 func (syncMap *SyncMap) syncMapDefParse(syncMapDef string) {
@@ -40,6 +41,7 @@ func (syncMap *SyncMap) syncMapDefParse(syncMapDef string) {
 	syncMap.Name = res[syncMapDefRegexpNameIndex]
 	syncMap.KeyType = res[syncMapDefRegexpKeyTypeIndex]
 	syncMap.ValueType = res[syncMapDefRegexpValueTypeIndex]
+	syncMap.emptyValueName = fmt.Sprintf("%s%sEmptyValue", syncMap.ValueType, syncMap.Name)
 	return
 }
 
@@ -77,7 +79,10 @@ func (s *SyncMapGenerator) writeToFile(syncMap *SyncMap) {
 
 	generateFile.HeaderComment(generate.WriteDoNotEdit())
 	generateFile.Add(syncMap.writeTypeDef())
+	generateFile.Add(syncMap.writeEmptyValue())
 	generateFile.Add(syncMap.writeFuncStore())
+	generateFile.Add(syncMap.writeFuncLoadOrStore())
+	generateFile.Add(syncMap.writeFuncLoad())
 
 	err := generateFile.Save(syncMapFileName)
 	if err != nil {
