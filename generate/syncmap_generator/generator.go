@@ -34,7 +34,7 @@ type SyncMap struct {
 
 func (syncMap *SyncMap) syncMapDefParse(syncMapDef string) {
 	var res []string
-	res = syncMapDefRegexp.FindStringSubmatch("Pill<int,int>")
+	res = syncMapDefRegexp.FindStringSubmatch(syncMapDef)
 	if len(res) != syncMapDefRegexpTotal {
 		panic("cannot find syncmap name, key type and value type")
 	}

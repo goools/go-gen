@@ -55,7 +55,7 @@ func (syncMap *SyncMap) writeFuncLoadOrStore() jen.Code {
 	res = res.Id(funcName)
 	// func params
 	res = res.Params(jen.List(jen.Id("key").Id(syncMap.KeyType), jen.Id("value").Id(syncMap.ValueType))).
-		Params(jen.List(jen.Id(syncMap.KeyType), jen.Bool()))
+		Params(jen.List(jen.Id(syncMap.ValueType), jen.Bool()))
 
 	// func body
 	syncMapObjId := syncMap.syncMapObjId()
@@ -80,7 +80,7 @@ func (syncMap *SyncMap) writeFuncLoad() jen.Code {
 	// func name
 	res = res.Id(funcName)
 	// func params
-	res = res.Params(jen.List(jen.Id("key").Id(syncMap.KeyType))).Params(jen.List(jen.Id(syncMap.KeyType), jen.Bool()))
+	res = res.Params(jen.List(jen.Id("key").Id(syncMap.KeyType))).Params(jen.List(jen.Id(syncMap.ValueType), jen.Bool()))
 
 	// func body
 	syncMapObjId := syncMap.syncMapObjId()
