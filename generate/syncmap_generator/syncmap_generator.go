@@ -9,7 +9,7 @@ import (
 )
 
 func (syncMap *SyncMap) writeEmptyValue() jen.Code {
-	emptyFunc := jen.Func().Params().Params(jen.Id("val").Add(jen.Id(syncMap.ValueType))).Block(jen.Return())
+	emptyFunc := jen.Func().Params().Params(jen.Id("val").Add(syncMap.ValueType())).Block(jen.Return())
 	return jen.Var().Id(syncMap.emptyValueName).Op("=").Add(emptyFunc.Call())
 }
 
@@ -34,7 +34,10 @@ func (syncMap *SyncMap) writeFuncStore() jen.Code {
 	// func name
 	res = res.Id(funcName)
 	// func params
-	res = res.Params(jen.List(jen.Id("key").Id(syncMap.KeyType), jen.Id("value").Id(syncMap.ValueType)))
+	res = res.Params(jen.List(
+		jen.Id("key").Add(syncMap.KeyType()),
+		jen.Id("value").Add(syncMap.ValueType()),
+	))
 	// func body
 	syncMapObjId := syncMap.syncMapObjId()
 
@@ -54,12 +57,14 @@ func (syncMap *SyncMap) writeFuncLoadOrStore() jen.Code {
 	// func name
 	res = res.Id(funcName)
 	// func params
-	res = res.Params(jen.List(jen.Id("key").Id(syncMap.KeyType), jen.Id("value").Id(syncMap.ValueType))).
-		Params(jen.List(jen.Id(syncMap.ValueType), jen.Bool()))
+	res = res.Params(jen.List(
+		jen.Id("key").Add(syncMap.KeyType()),
+		jen.Id("value").Add(syncMap.ValueType()),
+	)).Params(jen.List(syncMap.ValueType(), jen.Bool()))
 
 	// func body
 	syncMapObjId := syncMap.syncMapObjId()
-	result := jen.Id("res").Assert(jen.Id(syncMap.ValueType))
+	result := jen.Id("res").Assert(syncMap.ValueType())
 	res = res.Block(
 		jen.List(jen.Id("res"), jen.Id("ok")).Op(":=").Add(syncMapObjId.Dot("LoadOrStore").Call(jen.Id("key"), jen.Id("value"))),
 		jen.If(jen.Op("!").Add().Id("ok")).Block(
@@ -80,11 +85,11 @@ func (syncMap *SyncMap) writeFuncLoad() jen.Code {
 	// func name
 	res = res.Id(funcName)
 	// func params
-	res = res.Params(jen.List(jen.Id("key").Id(syncMap.KeyType))).Params(jen.List(jen.Id(syncMap.ValueType), jen.Bool()))
+	res = res.Params(jen.List(jen.Id("key").Add(syncMap.KeyType()))).Params(jen.List(syncMap.ValueType(), jen.Bool()))
 
 	// func body
 	syncMapObjId := syncMap.syncMapObjId()
-	result := jen.Id("res").Assert(jen.Id(syncMap.ValueType))
+	result := jen.Id("res").Assert(syncMap.ValueType())
 	res = res.Block(
 		jen.List(jen.Id("res"), jen.Id("ok")).Op(":=").Add(syncMapObjId.Dot("Load").Call(jen.Id("key"))),
 		jen.If(jen.Op("!").Add().Id("ok")).Block(
@@ -105,7 +110,7 @@ func (syncMap *SyncMap) writeFuncDelete() jen.Code {
 	// func name
 	res = res.Id(funcName)
 	// func params
-	res = res.Params(jen.List(jen.Id("key").Id(syncMap.KeyType)))
+	res = res.Params(jen.List(jen.Id("key").Add(syncMap.KeyType())))
 
 	// func body
 	syncMapObjId := syncMap.syncMapObjId()
@@ -125,16 +130,16 @@ func (syncMap *SyncMap) writeFuncRange() jen.Code {
 	res = res.Id(funcName)
 	// func params
 	rangeParamFunc := jen.Func().Params(jen.List(
-		jen.Id("key").Add(jen.Id(syncMap.KeyType)),
-		jen.Id("value").Add(jen.Id(syncMap.ValueType)),
+		jen.Id("key").Add(syncMap.KeyType()),
+		jen.Id("value").Add(syncMap.ValueType()),
 	)).Params(jen.Bool())
 	res = res.Params(jen.Id("f").Add(rangeParamFunc))
 
 	// func body
 	convertRangeFunc := jen.Func().Params(jen.List(jen.Id("ikey"), jen.Id("ivalue").Add(jen.Interface()))).
 		Params(jen.Bool()).Block(
-		jen.Id("k").Op(":=").Add(jen.Id("ikey").Assert(jen.Id(syncMap.KeyType))),
-		jen.Id("v").Op(":=").Add(jen.Id("ivalue").Assert(jen.Id(syncMap.ValueType))),
+		jen.Id("k").Op(":=").Add(jen.Id("ikey").Assert(syncMap.KeyType())),
+		jen.Id("v").Op(":=").Add(jen.Id("ivalue").Assert(syncMap.ValueType())),
 		jen.Return(jen.Id("f").Call(jen.Id("k"), jen.Id("v"))),
 	)
 	convertRangeFuncObj := jen.Id("rangeF").Op(":=").Add(convertRangeFunc)
@@ -168,8 +173,8 @@ func (syncMap *SyncMap) writeFuncLoadAndDelete() jen.Code {
 	// func name
 	res = res.Id(funcName)
 	// func params
-	res = res.Params(jen.Id("key").Add(jen.Id(syncMap.KeyType))).Params(jen.List(
-		jen.Id(syncMap.ValueType),
+	res = res.Params(jen.Id("key").Add(syncMap.KeyType())).Params(jen.List(
+		syncMap.ValueType(),
 		jen.Bool(),
 	))
 
@@ -186,7 +191,7 @@ func (syncMap *SyncMap) writeFuncLoadAndDelete() jen.Code {
 	res = res.Block(
 		loadAndDelete,
 		judgeOk,
-		jen.Return(jen.Id("value").Assert(jen.Id(syncMap.ValueType)), jen.Id("ok")),
+		jen.Return(jen.Id("value").Assert(syncMap.ValueType()), jen.Id("ok")),
 	)
 
 	return res

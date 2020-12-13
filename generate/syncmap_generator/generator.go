@@ -3,6 +3,7 @@ package syncmap_generator
 import (
 	"fmt"
 	"regexp"
+	"strings"
 
 	"github.com/dave/jennifer/jen"
 	"github.com/goools/go-gen/generate"
@@ -11,7 +12,7 @@ import (
 )
 
 var (
-	syncMapDefRegexp = regexp.MustCompile(`([A-Za-z_][A-Za-z0-9]*)<([A-Za-z][A-Za-z0-9]*),([A-Za-z][A-Za-z0-9]*)>`)
+	syncMapDefRegexp = regexp.MustCompile(`([A-Za-z_][A-Za-z0-9]*)<([A-Za-z][A-Za-z0-9/.]*),([A-Za-z][A-Za-z0-9/.]*)>`)
 )
 
 const (
@@ -22,14 +23,67 @@ const (
 	syncMapFuncThisName            = "s"
 )
 
+type Type struct {
+	packagePath string
+	typeName    string
+	code        jen.Code
+}
+
+func (t *Type) Code() jen.Code {
+	if t.code != nil {
+		return t.code
+	}
+	if t.packagePath == "" {
+		t.code = jen.Id(t.typeName)
+	} else {
+		t.code = jen.Qual(t.packagePath, t.typeName)
+	}
+	return t.code
+}
+
+func (t *Type) TypeName() string {
+	if t.packagePath != "" {
+		pkgPath := t.packagePath
+		pkgPath = strings.ReplaceAll(pkgPath, ".", "_")
+		pkgPath = strings.ReplaceAll(pkgPath, "/", "__")
+		return fmt.Sprintf("%s_%s", pkgPath, t.typeName)
+	}
+	return t.typeName
+}
+
+func NewType(typeDef string) *Type {
+	index := strings.LastIndex(typeDef, ".")
+	var res *Type
+	if index == -1 {
+		res = &Type{
+			typeName: typeDef,
+		}
+	} else {
+		res = &Type{
+			packagePath: typeDef[:index],
+			typeName:    typeDef[index+1:],
+		}
+	}
+	logrus.Debugf("type: %#v", res)
+	return res
+}
+
 type SyncMap struct {
 	PkgPath        string
 	Name           string
-	KeyType        string
-	ValueType      string
+	Key            *Type
+	Value          *Type
 	funcTypeName   string
 	funcThisName   string
 	emptyValueName string
+}
+
+func (syncMap *SyncMap) KeyType() jen.Code {
+	return syncMap.Key.Code()
+}
+
+func (syncMap *SyncMap) ValueType() jen.Code {
+	return syncMap.Value.Code()
 }
 
 func (syncMap *SyncMap) syncMapDefParse(syncMapDef string) {
@@ -39,9 +93,11 @@ func (syncMap *SyncMap) syncMapDefParse(syncMapDef string) {
 		panic("cannot find syncmap name, key type and value type")
 	}
 	syncMap.Name = res[syncMapDefRegexpNameIndex]
-	syncMap.KeyType = res[syncMapDefRegexpKeyTypeIndex]
-	syncMap.ValueType = res[syncMapDefRegexpValueTypeIndex]
-	syncMap.emptyValueName = fmt.Sprintf("%s%sEmptyValue", syncMap.ValueType, syncMap.Name)
+	keyType := res[syncMapDefRegexpKeyTypeIndex]
+	syncMap.Key = NewType(keyType)
+	valueType := res[syncMapDefRegexpValueTypeIndex]
+	syncMap.Value = NewType(valueType)
+	syncMap.emptyValueName = fmt.Sprintf("_%s_%s_empty_value", syncMap.Value.TypeName(), syncMap.Name)
 	return
 }
 
@@ -96,7 +152,7 @@ func (s *SyncMapGenerator) writeToFile(syncMap *SyncMap) {
 
 	err := generateFile.Save(syncMapFileName)
 	if err != nil {
-		logrus.Fatalf("save enum code to file have an err: %v, syncmap: %s, file: %s", err, syncMap.Name, syncMapFileName)
+		logrus.Fatalf("save syncmap code to file have an err: %v, syncmap: %s, file: %s", err, syncMap.Name, syncMapFileName)
 	}
 	logrus.Infof("complete generate syncmap: %s", syncMap.Name)
 }
