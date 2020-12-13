@@ -86,7 +86,7 @@ func (gen *EnumGenerator) WriteToFile() {
 
 func (gen *EnumGenerator) writeToFile(packageFilePath string, enum *Enum) {
 
-	enumFileName := fmt.Sprintf("%s_generate.go", generate.ToSnakeCase(enum.Name))
+	enumFileName := fmt.Sprintf("%s_enum_generate.go", generate.ToSnakeCase(enum.Name))
 	enumFilePath := filepath.Join(packageFilePath, enumFileName)
 	logrus.Debugf("begin generate enum: %s, package path: %s, file path: %s",
 		enum.Name, enum.PkgPath, enumFilePath)
