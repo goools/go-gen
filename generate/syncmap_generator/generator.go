@@ -79,10 +79,20 @@ func (s *SyncMapGenerator) writeToFile(syncMap *SyncMap) {
 
 	generateFile.HeaderComment(generate.WriteDoNotEdit())
 	generateFile.Add(syncMap.writeTypeDef())
+	generateFile.Line()
 	generateFile.Add(syncMap.writeEmptyValue())
+	generateFile.Line()
 	generateFile.Add(syncMap.writeFuncStore())
+	generateFile.Line()
 	generateFile.Add(syncMap.writeFuncLoadOrStore())
+	generateFile.Line()
 	generateFile.Add(syncMap.writeFuncLoad())
+	generateFile.Line()
+	generateFile.Add(syncMap.writeFuncDelete())
+	generateFile.Line()
+	generateFile.Add(syncMap.writeFuncRange())
+	generateFile.Line()
+	generateFile.Add(syncMap.writeFuncLoadAndDelete())
 
 	err := generateFile.Save(syncMapFileName)
 	if err != nil {

@@ -2,6 +2,8 @@ package syncmap_generator
 
 import (
 	"github.com/dave/jennifer/jen"
+	"github.com/sirupsen/logrus"
+	"runtime"
 )
 
 func (syncMap *SyncMap) writeEmptyValue() jen.Code {
@@ -90,4 +92,62 @@ func (syncMap *SyncMap) writeFuncLoad() jen.Code {
 	)
 
 	return res
+}
+
+func (syncMap *SyncMap) writeFuncDelete() jen.Code {
+	funcName := "Delete"
+	// func
+	res := jen.Func()
+	// func type params
+	res = res.Params(syncMap.funcTypeParams())
+	// func name
+	res = res.Id(funcName)
+	// func params
+	res = res.Params(jen.List(jen.Id("key").Id(syncMap.KeyType)))
+
+	// func body
+	syncMapObjId := syncMap.syncMapObjId()
+	res = res.Block(
+		syncMapObjId.Dot("Delete").Call(jen.Id("key")),
+	)
+	return res
+}
+
+func (syncMap *SyncMap) writeFuncRange() jen.Code {
+
+	funcName := "Range"
+	// func
+	res := jen.Func()
+	// func type params
+	res = res.Params(syncMap.funcTypeParams())
+	// func name
+	res = res.Id(funcName)
+	// func params
+	rangeParamFunc := jen.Func().Params(jen.List(
+		jen.Id("key").Add(jen.Id(syncMap.KeyType)),
+		jen.Id("value").Add(jen.Id(syncMap.ValueType)),
+	)).Params(jen.Bool())
+	res = res.Params(jen.Id("f").Add(rangeParamFunc))
+
+	// func body
+	convertRangeFunc := jen.Func().Params(jen.List(jen.Id("ikey"), jen.Id("ivalue").Add(jen.Interface()))).
+		Params(jen.Bool()).Block(
+		jen.Id("k").Op(":=").Add(jen.Id("ikey").Assert(jen.Id(syncMap.KeyType))),
+		jen.Id("v").Op(":=").Add(jen.Id("ivalue").Assert(jen.Id(syncMap.ValueType))),
+		jen.Return(jen.Id("f").Call(jen.Id("k"), jen.Id("v"))),
+	)
+	convertRangeFuncObj := jen.Id("rangeF").Op(":=").Add(convertRangeFunc)
+	syncMapObjId := syncMap.syncMapObjId()
+	res = res.Block(
+		convertRangeFuncObj,
+		syncMapObjId.Dot("Range").Call(jen.Id("rangeF")),
+	)
+
+	return res
+}
+
+func (syncMap *SyncMap) writeFuncLoadAndDelete() jen.Code {
+	version := runtime.Version()
+	logrus.Infof("version: %s", version)
+	return jen.Line()
 }
