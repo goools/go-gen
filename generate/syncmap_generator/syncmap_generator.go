@@ -4,6 +4,8 @@ import (
 	"github.com/dave/jennifer/jen"
 	"github.com/sirupsen/logrus"
 	"runtime"
+	"strconv"
+	"strings"
 )
 
 func (syncMap *SyncMap) writeEmptyValue() jen.Code {
@@ -114,7 +116,6 @@ func (syncMap *SyncMap) writeFuncDelete() jen.Code {
 }
 
 func (syncMap *SyncMap) writeFuncRange() jen.Code {
-
 	funcName := "Range"
 	// func
 	res := jen.Func()
@@ -148,6 +149,45 @@ func (syncMap *SyncMap) writeFuncRange() jen.Code {
 
 func (syncMap *SyncMap) writeFuncLoadAndDelete() jen.Code {
 	version := runtime.Version()
-	logrus.Infof("version: %s", version)
-	return jen.Line()
+	version = version[2:]
+	resVersion := strings.Split(version, ".")
+	secondVersionStr := resVersion[1]
+	secondVersion, err := strconv.ParseInt(secondVersionStr, 10, 64)
+	if err != nil {
+		logrus.Fatalf("cannot parse int, from %s to int", secondVersionStr)
+	}
+	if secondVersion < 15 {
+		return jen.Empty()
+	}
+
+	funcName := "LoadAndDelete"
+	// func
+	res := jen.Func()
+	// func type params
+	res = res.Params(syncMap.funcTypeParams())
+	// func name
+	res = res.Id(funcName)
+	// func params
+	res = res.Params(jen.Id("key").Add(jen.Id(syncMap.KeyType))).Params(jen.List(
+		jen.Id(syncMap.ValueType),
+		jen.Bool(),
+	))
+
+	// func body
+	syncMapObjId := syncMap.syncMapObjId()
+	loadAndDelete := jen.List(jen.Id("value"), jen.Id("ok")).Op(":=").Add(
+		syncMapObjId.Dot("LoadAndDelete").Call(jen.Id("key")),
+	)
+
+	judgeOk := jen.If(jen.Op("!").Add(jen.Id("ok"))).Block(
+		jen.Return(jen.Id(syncMap.emptyValueName), jen.Id("ok")),
+	)
+
+	res = res.Block(
+		loadAndDelete,
+		judgeOk,
+		jen.Return(jen.Id("value").Assert(jen.Id(syncMap.ValueType)), jen.Id("ok")),
+	)
+
+	return res
 }
