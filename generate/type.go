@@ -14,6 +14,11 @@ type Type struct {
 	code        jen.Code
 }
 
+func (t *Type) PtrCode() jen.Code {
+	code := t.Code()
+	return jen.Op("*").Add(code)
+}
+
 func (t *Type) Code() jen.Code {
 	if t.code != nil {
 		return t.code
@@ -37,6 +42,7 @@ func (t *Type) TypeName() string {
 }
 
 func NewType(typeDef string) *Type {
+	typeDef = strings.Trim(typeDef, "*")
 	index := strings.LastIndex(typeDef, ".")
 	var res *Type
 	if index == -1 {
