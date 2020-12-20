@@ -9,6 +9,7 @@ import (
 
 	"github.com/dave/jennifer/jen"
 	"github.com/goools/go-gen/generate"
+	"github.com/goools/tools/strx"
 	"github.com/sirupsen/logrus"
 )
 
@@ -36,7 +37,7 @@ type SyncMap struct {
 
 func (syncMap *SyncMap) WriteToFile() {
 	logrus.Infof("begin generate syncmap: %s", syncMap.Name)
-	syncMapSnackName := generate.ToSnakeCase(syncMap.Name)
+	syncMapSnackName := strx.ToSnakeCase(syncMap.Name)
 	syncMapFileName := fmt.Sprintf("%s_syncmap_generate.go", syncMapSnackName)
 	generateFile := jen.NewFilePath(syncMap.PkgPath)
 

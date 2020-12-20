@@ -6,6 +6,7 @@ import (
 
 	"github.com/dave/jennifer/jen"
 	"github.com/goools/go-gen/generate"
+	"github.com/goools/tools/strx"
 	"github.com/sirupsen/logrus"
 )
 
@@ -50,7 +51,7 @@ func (syncPool *SyncPool) parseDef(syncPoolDef string) {
 
 func (syncPool *SyncPool) WriteToFile() {
 	logrus.Infof("begin generate sync pool: %s", syncPool.Name)
-	syncPoolSnackName := generate.ToSnakeCase(syncPool.Name)
+	syncPoolSnackName := strx.ToSnakeCase(syncPool.Name)
 	syncPoolFileName := fmt.Sprintf("%s_syncpool_generate.go", syncPoolSnackName)
 
 	generateFile := jen.NewFilePath(syncPool.PkgPath)

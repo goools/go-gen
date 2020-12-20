@@ -6,6 +6,7 @@ import (
 
 	"github.com/dave/jennifer/jen"
 	"github.com/goools/go-gen/generate"
+	"github.com/goools/tools/strx"
 	"github.com/sirupsen/logrus"
 )
 
@@ -50,7 +51,7 @@ func (atomicValue *AtomicValue) parseDef(typeDef string) {
 
 func (atomicValue *AtomicValue) WriteToFile() {
 	logrus.Infof("begin generate atomic value: %s", atomicValue.Name)
-	atomicValueSnackName := generate.ToSnakeCase(atomicValue.Name)
+	atomicValueSnackName := strx.ToSnakeCase(atomicValue.Name)
 	atomicValueFileName := fmt.Sprintf("%s_atomicvalue_generate.go", atomicValueSnackName)
 
 	generateFile := jen.NewFilePath(atomicValue.PkgPath)
