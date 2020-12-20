@@ -1,7 +1,14 @@
 package packagex
 
 import (
+	"fmt"
+	"go/ast"
+	"go/parser"
+	"go/token"
 	"go/types"
+	"os"
+
+	"github.com/sirupsen/logrus"
 	"golang.org/x/tools/go/packages"
 )
 
@@ -94,4 +101,36 @@ func (p *Package) Pkg(pkgPath string) *packages.Package {
 		}
 	}
 	return nil
+}
+
+func Struct(pkgPath string) {
+	goFile := os.Getenv("GOFILE")
+	logrus.Infof("go file: %s", goFile)
+	fset := token.NewFileSet()
+	f, err := parser.ParseFile(fset, goFile, nil, 0)
+	if err != nil {
+		panic(fmt.Errorf("parse file: %s have an err: %v", goFile, err))
+	}
+
+	for _, node := range f.Decls {
+		if genDecl, ok := node.(*ast.GenDecl); !ok {
+			continue
+		} else {
+			for _, spec := range genDecl.Specs {
+				if typeSpec, ok := spec.(*ast.TypeSpec); !ok {
+					continue
+				} else {
+					if strcutType, ok := typeSpec.Type.(*ast.StructType); !ok {
+						continue
+					} else {
+						for _, field := range strcutType.Fields.List {
+							ident := field.Type.(*ast.Ident)
+							logrus.Infof("name: %#v", ident.Name)
+							logrus.Infof("comment: %#v", field.Comment)
+						}
+					}
+				}
+			}
+		}
+	}
 }

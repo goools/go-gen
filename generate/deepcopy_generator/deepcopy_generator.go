@@ -3,6 +3,7 @@ package deepcopy_generator
 import (
 	"github.com/goools/go-gen/generate"
 	"github.com/goools/go-gen/packagex"
+	"github.com/sirupsen/logrus"
 )
 
 type DeepCopyGenerator struct {
@@ -25,7 +26,8 @@ func (g *DeepCopyGenerator) WriteToFile() {
 func (g *DeepCopyGenerator) Scan(args ...string) {
 	for i := range args {
 		structNameDef := args[i]
-		deepCopy := NewDeepCopy(g.pkg.PkgPath, structNameDef)
+		logrus.Infof("struct name: %s", structNameDef)
+		deepCopy := NewDeepCopy(g.pkg, structNameDef)
 		g.deepCopys = append(g.deepCopys, deepCopy)
 	}
 }
