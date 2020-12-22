@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	syncMapDefRegexp = regexp.MustCompile(`([A-Za-z_][A-Za-z0-9]*)<([A-Za-z][A-Za-z0-9/.]*),([A-Za-z][A-Za-z0-9/.]*)>`)
+	syncMapDefRegexp = regexp.MustCompile(`([A-Za-z_][A-Za-z0-9]*)<([*A-Za-z][A-Za-z0-9/.]*),([*A-Za-z][A-Za-z0-9/.]*)>`)
 )
 
 const (

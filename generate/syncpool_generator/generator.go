@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	syncPoolDefRegexp = regexp.MustCompile(`([A-Za-z_][A-Za-z0-9]*)<([A-Za-z][A-Za-z0-9/.]*)>`)
+	syncPoolDefRegexp = regexp.MustCompile(`([A-Za-z_][A-Za-z0-9]*)<([*A-Za-z][A-Za-z0-9/.]*)>`)
 )
 
 const (
@@ -77,7 +77,7 @@ func (syncPool *SyncPool) writeTypeDef() jen.Code {
 }
 
 func (syncPool *SyncPool) ValueType() jen.Code {
-	return syncPool.Value.Code()
+	return syncPool.Value.PtrCode()
 }
 
 func (syncPool *SyncPool) PreFuncCommon(funcName string) *jen.Statement {
